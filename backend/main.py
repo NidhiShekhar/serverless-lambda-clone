@@ -3,10 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import logging
 from prometheus_client import make_asgi_app
+from contextlib import asynccontextmanager
 
 # Import routers from api folder
 from backend.api.routes_execution import router as execution_router
 from backend.api.routes_functions import router as function_router  # Assuming this exists
+from backend.engine.docker_utils import check_docker_availability, check_docker_permissions
 
 # make sure you are in root directory and then run uvicorn backend.main:app --reload
 # Configure logging
@@ -18,10 +20,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
+# Add FastAPI startup event
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    import sys
+    if not check_docker_availability():
+        sys.exit("Docker is required but not available")
+    if not check_docker_permissions():
+        sys.exit("Insufficient permissions to use Docker")
+    yield  # Application lifespan continues here
+
 app = FastAPI(
     title="Serverless Functions Platform",
     description="API for deploying and executing serverless functions",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan # Use the lifespan context manager
 )
 
 # Add CORS middleware
@@ -50,3 +63,5 @@ app.mount(os.getenv("PROMETHEUS_METRICS_PATH", "/metrics"), metrics_app)
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+
