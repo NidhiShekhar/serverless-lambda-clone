@@ -4,9 +4,9 @@ from backend.db import get_db
 from backend import crud, models
 from backend.engine.executor import execute_function_engine
 
-execution_router = APIRouter()
+router = APIRouter()
 
-@execution_router.post("/functions/{id}/execute", tags=["execution"])
+@router.post("/functions/{id}/execute", tags=["execution"])
 async def execute_function(id: int, db: Session = Depends(get_db)):
     # Fetch the function by ID
     function = crud.get_function(db, id=id)
@@ -24,7 +24,7 @@ async def execute_function(id: int, db: Session = Depends(get_db)):
 
     return {"status": "success", "result": result}
 
-@execution_router.get("/functions/{id}/logs", tags=["execution"])
+@router.get("/functions/{id}/logs", tags=["execution"])
 async def get_function_logs(id: int, db: Session = Depends(get_db)):
     # Fetch logs for the function
     logs = crud.get_logs_for_function(db, function_id=id)

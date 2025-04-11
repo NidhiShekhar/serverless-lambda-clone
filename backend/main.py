@@ -5,9 +5,10 @@ import logging
 from prometheus_client import make_asgi_app
 
 # Import routers from api folder
-from api.routes_execution import router as execution_router
-from api.routes_functions import router as function_router  # Assuming this exists
+from backend.api.routes_execution import router as execution_router
+from backend.api.routes_functions import router as function_router  # Assuming this exists
 
+# make sure you are in root directory and then run uvicorn backend.main:app --reload
 # Configure logging
 log_level = os.getenv("LOG_LEVEL", "info").upper()
 logging.basicConfig(
