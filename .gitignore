@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+venv/
+ENV/
+env/
+.idea/
+
+# VSCode
+.vscode/
+
+# Docker
+*.log
+*.pid
+
+# PostgreSQL data (if any local volumes)
+pgdata/
+*.db
+
+# Grafana
+grafana.db
+
+# OS junk
+.DS_Store
+Thumbs.db
+
