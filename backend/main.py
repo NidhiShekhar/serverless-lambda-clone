@@ -1,9 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import PlainTextResponse
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import logging
 from prometheus_client import make_asgi_app
 from contextlib import asynccontextmanager
+from backend.metrics import REQUEST_COUNT, REQUEST_LATENCY, FUNCTION_EXECUTIONS, FUNCTION_EXECUTION_TIME
+import time
 
 # Import routers from api folder
 from backend.api.routes_execution import router as execution_router
@@ -37,6 +41,30 @@ app = FastAPI(
     lifespan=lifespan # Use the lifespan context manager
 )
 
+
+# Add middleware to track request metrics
+@app.middleware("http")
+async def track_requests(request: Request, call_next):
+    start_time = time.time()
+
+    response = await call_next(request)
+
+    # Record request latency
+    latency = time.time() - start_time
+    REQUEST_LATENCY.labels(
+        method=request.method,
+        endpoint=request.url.path
+    ).observe(latency)
+
+    # Record request count
+    REQUEST_COUNT.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        http_status=response.status_code
+    ).inc()
+
+    return response
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -58,6 +86,7 @@ async def root():
 # Add Prometheus metrics endpoint
 metrics_app = make_asgi_app()
 app.mount(os.getenv("PROMETHEUS_METRICS_PATH", "/metrics"), metrics_app)
+
 
 # Main entrypoint for Uvicorn
 if __name__ == "__main__":

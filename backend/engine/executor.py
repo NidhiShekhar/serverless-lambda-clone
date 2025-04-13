@@ -5,6 +5,8 @@ import time
 import docker
 import logging
 from pathlib import Path
+import time
+from backend.metrics import FUNCTION_EXECUTIONS, FUNCTION_EXECUTION_TIME, REQUEST_COUNT, REQUEST_LATENCY
 
 logger = logging.getLogger(__name__)
 
@@ -204,4 +206,31 @@ def execute_function_engine(function):
     Returns:
         dict: Execution result containing output or error.
     """
-    return docker_executor.execute_function(function)
+    start_time = time.time()
+
+    # Call the original function and store its result
+    result = docker_executor.execute_function(function)
+
+    # Calculate execution time
+    execution_time = time.time() - start_time
+
+    # Get function name or use default
+    function_name = getattr(function, 'name', 'unnamed')
+
+    # Determine execution status
+    status = "error" if "error" in result else "success"
+
+    # Record metrics
+    FUNCTION_EXECUTIONS.labels(
+        language=function.language,
+        status=status
+    ).inc()
+
+    FUNCTION_EXECUTION_TIME.labels(
+        language=function.language,
+        function_name=function_name,
+        status=status
+    ).observe(execution_time)
+
+    # Return the original result unchanged
+    return result
