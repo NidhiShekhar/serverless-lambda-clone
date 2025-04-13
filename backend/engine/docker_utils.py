@@ -28,7 +28,7 @@ def check_docker_permissions():
         import docker
         client = docker.from_env()
         # Try a simple container as a permissions test
-        container = client.containers.run("hello-world", detach =False, remove=True, network='host')
+        container = client.containers.run("hello-world", detach =False, remove=True, network_mode='host')
         return True
     except Exception as e:
         logger.error(f"Insufficient Docker permissions: {str(e)}")

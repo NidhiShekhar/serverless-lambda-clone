@@ -1,11 +1,11 @@
-# docker/javascript/Dockerfile
-FROM node:16-alpine
+FROM node:14-alpine
 
 WORKDIR /app
 
-# Set up a non-root user for better security
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
+# Don't try to copy function.js at build time
+# Copy package.json if it exists
+COPY package.json* .
+RUN if [ -f package.json ]; then npm install; fi
 
-COPY function.js /app/
+# The actual function.js will be mounted at runtime
 CMD ["node", "function.js"]

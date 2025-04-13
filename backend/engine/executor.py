@@ -34,17 +34,21 @@ class DockerExecutor:
 
             for attempt in range(retries):
                 try:
-                    logger.info(f"Building {image_name} image...")
+                    logger.info(f"Building {image_name} image, attempt {attempt + 1}/{retries}...")
+                    # Build with network_mode=none to avoid networking issues
                     self.client.images.build(
                         path=str(image_path),
                         tag=f"{image_name}:latest",
-                        quiet=False
+                        quiet=False,
+                        network_mode="host",
+                        nocache=False
                     )
                     logger.info(f"Successfully built {image_name} image")
                     break
                 except Exception as e:
                     logger.error(f"Failed to build {image_name} image: {str(e)}")
                     if attempt < retries - 1:
+                        logger.info(f"Retrying in 2 seconds...")
                         time.sleep(2)  # Wait before retrying
                     else:
                         raise RuntimeError(f"Failed to build {image_name} after {retries} attempts")
@@ -96,13 +100,15 @@ class DockerExecutor:
     def _run_container(self, image, mount_path, timeout):
         """Run a container with the given parameters"""
         start_time = time.time()
+        container = None
 
         try:
+            # Try with network_disabled first (most reliable)
             container = self.client.containers.run(
                 image=image,
                 volumes={mount_path: {'bind': '/app', 'mode': 'ro'}},
                 detach=True,
-                network_mode='host',  # Use host networking instead of bridge
+                network_disabled=True,  # Disable networking completely
                 mem_limit='128m',  # Memory limit
                 cpu_quota=100000,  # CPU limit (100% of 1 CPU)
                 read_only=True  # Make filesystem read-only
@@ -125,27 +131,63 @@ class DockerExecutor:
 
         except Exception as e:
             logger.error(f"Docker execution error: {str(e)}")
-            return {"error": f"Container execution failed: {str(e)}"}
+
+            # Fallback to host networking if disabling network failed
+            try:
+                logger.info("Trying with host networking instead...")
+                container = self.client.containers.run(
+                    image=image,
+                    volumes={mount_path: {'bind': '/app', 'mode': 'ro'}},
+                    detach=True,
+                    network_mode='host',
+                    mem_limit='128m',
+                    cpu_quota=100000,
+                    read_only=True
+                )
+
+                result = container.wait(timeout=timeout)
+                logs = container.logs().decode('utf-8')
+
+                if result['StatusCode'] == 0:
+                    return {"output": logs.strip()}
+                else:
+                    return {"error": logs.strip()}
+
+            except Exception as fallback_error:
+                logger.error(f"Fallback execution also failed: {str(fallback_error)}")
+                return {"error": f"Container execution failed: {str(e)}\nFallback also failed: {str(fallback_error)}"}
 
         finally:
             # Cleanup: remove container
             try:
-                container.remove(force=True)
-            except:
-                pass
+                if container:
+                    container.remove(force=True)
+            except Exception as cleanup_error:
+                logger.warning(f"Container cleanup failed: {str(cleanup_error)}")
 
             execution_time = time.time() - start_time
             logger.info(f"Function execution took {execution_time:.2f} seconds")
 
     def run_container(self, image_name, command, **kwargs):
-        # Add network_mode='host' to avoid bridge networking issues
-        return self.client.containers.run(
-            image_name,
-            command,
-            network_mode='host',  # Use host networking instead of bridge
-            remove=True,
-            **kwargs
-        )
+        # Try with network_disabled first, fallback to host networking
+        try:
+            return self.client.containers.run(
+                image_name,
+                command,
+                network_disabled=True,
+                remove=True,
+                **kwargs
+            )
+        except Exception as e:
+            logger.warning(f"Failed to run with network_disabled: {str(e)}")
+            # Fallback to host networking
+            return self.client.containers.run(
+                image_name,
+                command,
+                network_mode='host',
+                remove=True,
+                **kwargs
+            )
 
 
 # Export a singleton for app-wide use
