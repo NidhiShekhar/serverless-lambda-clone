@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import PlainTextResponse
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import logging
@@ -68,7 +68,7 @@ async def track_requests(request: Request, call_next):
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify actual origins
+    allow_origins=["http://localhost:8501"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
