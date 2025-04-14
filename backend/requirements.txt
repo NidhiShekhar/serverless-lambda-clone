@@ -9,6 +9,6 @@ prometheus-client
 python-multipart
 docker~=7.1.0
 pytest
-docker >= 6.0.0
+docker>=6.0.0
 prometheus_client~=0.21.1
 streamlit~=1.33.0

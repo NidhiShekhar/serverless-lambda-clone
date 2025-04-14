@@ -1,0 +1,97 @@
+{
+  "id": null,
+  "uid": "lambda-metrics",
+  "title": "Serverless Lambda Clone - Full Metrics",
+  "timezone": "browser",
+  "schemaVersion": 27,
+  "version": 1,
+  "refresh": "10s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total API Requests",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 6 },
+      "targets": [{ "expr": "sum(app_request_count_total)", "refId": "A", "legendFormat": "" }]
+    },
+    {
+      "type": "piechart",
+      "title": "Request Status Distribution",
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 6 },
+      "targets": [{ "expr": "sum by (http_status) (app_request_count_total)", "refId": "A", "legendFormat": "" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "API Request Rate",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 6 },
+      "targets": [{ "expr": "rate(app_request_count_total[5m])", "refId": "A", "legendFormat": "" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Average Request Latency",
+      "gridPos": { "x": 0, "y": 18, "w": 24, "h": 6 },
+      "targets": [{
+        "expr": "rate(app_request_latency_seconds_sum[5m]) / rate(app_request_latency_seconds_count[5m])",
+        "refId": "A",
+        "legendFormat": ""
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "95th Percentile Latency by Endpoint",
+      "gridPos": { "x": 0, "y": 24, "w": 24, "h": 6 },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum(rate(app_request_latency_seconds_bucket[5m])) by (endpoint, le))",
+        "refId": "A",
+        "legendFormat": ""
+      }]
+    },
+    {
+      "type": "barchart",
+      "title": "Function Executions by Language",
+      "gridPos": { "x": 0, "y": 30, "w": 24, "h": 6 },
+      "targets": [{ "expr": "sum by (language) (serverless_function_executions_total)", "refId": "A", "legendFormat": "" }]
+    },
+    {
+      "type": "piechart",
+      "title": "Success vs Error Rate",
+      "gridPos": { "x": 0, "y": 36, "w": 24, "h": 6 },
+      "targets": [{ "expr": "sum by (status) (serverless_function_executions_total)", "refId": "A", "legendFormat": "" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Function Execution Trend",
+      "gridPos": { "x": 0, "y": 42, "w": 24, "h": 6 },
+      "targets": [{ "expr": "rate(serverless_function_executions_total[5m])", "refId": "A", "legendFormat": "" }]
+    },
+    {
+      "type": "bargauge",
+      "title": "Average Execution Time by Function",
+      "gridPos": { "x": 0, "y": 48, "w": 24, "h": 6 },
+      "targets": [{
+        "expr": "rate(serverless_function_execution_seconds_sum[5m]) / rate(serverless_function_execution_seconds_count[5m])",
+        "refId": "A",
+        "legendFormat": ""
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Function Execution Time by Language",
+      "gridPos": { "x": 0, "y": 54, "w": 24, "h": 6 },
+      "targets": [{
+        "expr": "sum by (language) (rate(serverless_function_execution_seconds_sum[5m])) / sum by (language) (rate(serverless_function_execution_seconds_count[5m]))",
+        "refId": "A",
+        "legendFormat": ""
+      }]
+    },
+    {
+      "type": "table",
+      "title": "Slowest Functions (95th percentile)",
+      "gridPos": { "x": 0, "y": 60, "w": 24, "h": 6 },
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum(rate(serverless_function_execution_seconds_bucket[5m])) by (function_name, le))",
+        "refId": "A",
+        "legendFormat": ""
+      }]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+#docker-compose.yml file for the serverless application stack
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: serverless_backend
+    user: root
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/serverless_functions
+      - PROMETHEUS_METRICS_PATH=/metrics
+    volumes:
+      - /tmp:/tmp
+      - ./backend:/app/backend
+      - ./docker:/app/docker
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - db
+    networks:
+      - app-network
+      - monitoring-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://backend:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: ./frontend
+    container_name: serverless_frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://backend:8000
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - backend
+    networks:
+      - app-network
+      - monitoring-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    container_name: serverless_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=serverless_functions
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  app-network:
+    driver: bridge
+  monitoring-network:
+    external: true
+    name: frontend_monitoring_default
+
+volumes:
+  postgres_data:

@@ -1,20 +1,22 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
 
-# Load environment variables
+# Determine if running in Docker
+is_docker = os.getenv("DOCKER_ENV", "false").lower() == "true"
 
-
-# Get database connection settings from environment variables
-DB_USER = os.getenv("DB_USER", "postgres")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "serverless_functions")
-
-# Create PostgreSQL connection string
-SQLALCHEMY_DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# Use appropriate DATABASE_URL
+if is_docker:
+    SQLALCHEMY_DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        "postgresql://postgres:postgres@db:5432/serverless_functions"
+    )
+else:
+    SQLALCHEMY_DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        "postgresql://postgres:postgres@localhost:5432/serverless_functions"
+    )
 
 # Create SQLAlchemy engine
 engine = create_engine(SQLALCHEMY_DATABASE_URL)

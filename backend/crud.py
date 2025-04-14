@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 import time
 from . import models, schemas
-
+from fastapi import HTTPException
 
 # Function CRUD operations
 def create_function(db: Session, function: schemas.FunctionCreate):
@@ -13,8 +13,10 @@ def create_function(db: Session, function: schemas.FunctionCreate):
 
 
 def get_function(db: Session, id: int):
-    return db.query(models.Function).filter(models.Function.id == id).first()
-
+    function = db.query(models.Function).filter(models.Function.id == id).first()
+    if function is None:
+        raise HTTPException(status_code=404, detail=f"Function with id {id} not found")
+    return function
 
 def get_all_functions(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.Function).offset(skip).limit(limit).all()
@@ -22,11 +24,13 @@ def get_all_functions(db: Session, skip: int = 0, limit: int = 100):
 
 def delete_function(db: Session, id: int):
     db_function = get_function(db, id)
-    if db_function:
+    try:
         db.delete(db_function)
         db.commit()
         return True
-    return False
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete function: {str(e)}")
 
 
 # Execution Logs CRUD operations

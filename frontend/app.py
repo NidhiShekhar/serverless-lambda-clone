@@ -50,7 +50,7 @@ st.set_page_config(
 )
 
 # Base URL for the API
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "http://backend:8000"
 
 
 def main():
@@ -218,31 +218,38 @@ def view_logs():
 def show_metrics_dashboard():
     st.header("Metrics Dashboard")
 
-    # Display metrics iframe
-    st.write("View function execution metrics")
+    tab1, tab2 = st.tabs(["Grafana Dashboard", "Raw Metrics"])
 
-    # Embed Grafana or direct metrics from Prometheus
-    metrics_response = requests.get(f"{API_BASE_URL}/metrics")
-    if metrics_response.status_code == 200:
+    with tab1:
+        st.subheader("Function Execution Metrics")
+
+        # Replace with your actual dashboard ID from Grafana
+        # You can find this ID in the URL after /d/ when viewing your dashboard
+        dashboard_id = "lambda-metrics"
+
+        # Embed the Grafana dashboard with proper parameters
+        st.components.v1.iframe(
+            f"http://localhost:3000/d/lambda-metrics/serverless-lambda-clone-full-metrics?orgId=1&from=now-6h&to=now&timezone=browser&refresh=10s",
+            height=800,
+            scrolling=True
+        )
+
+    with tab2:
+        # Keep your existing raw metrics display code
         st.subheader("Raw Prometheus Metrics")
+        metrics_response = requests.get(f"{API_BASE_URL}/metrics")
+        if metrics_response.status_code == 200:
+            # Rest of your existing metrics code
+            metrics_text = metrics_response.text
+            function_metrics = [line for line in metrics_text.split('\n')
+                                if 'serverless_function' in line and not line.startswith('#')]
 
-        # Filter for just function execution metrics
-        metrics_text = metrics_response.text
-        function_metrics = [line for line in metrics_text.split('\n')
-                            if 'serverless_function' in line and not line.startswith('#')]
-
-        if function_metrics:
-            st.text('\n'.join(function_metrics))
+            if function_metrics:
+                st.text('\n'.join(function_metrics))
+            else:
+                st.info("No function execution metrics found")
         else:
-            st.info("No function execution metrics found")
-    else:
-        st.error("Failed to load metrics")
-
-    # Optional: Embed Grafana iframe if available
-    st.subheader("Grafana Dashboard")
-    st.markdown("If you have Grafana set up, add the iframe here:")
-    # st.components.v1.iframe("http://localhost:3000/d/your_dashboard_id", height=600)
-
+            st.error("Failed to load metrics")
 
 if __name__ == "__main__":
     main()

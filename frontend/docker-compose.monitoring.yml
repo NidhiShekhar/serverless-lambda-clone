@@ -1,0 +1,37 @@
+#docker-compose.monitoring.yml file for monitoring stack with Prometheus and Grafana
+version: '3'
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - monitoring_default
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - ../monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ../monitoring/grafana/provisioning/dashboards.yml:/etc/grafana/provisioning/dashboards.yml
+      - ../monitoring/grafana/provisioning/datasources.yml:/etc/grafana/provisioning/datasources.yml
+
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring_default
+
+networks:
+    monitoring_default:
+
+volumes:
+  grafana-storage:
