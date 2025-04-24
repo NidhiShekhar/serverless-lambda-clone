@@ -1,4 +1,3 @@
-#docker-compose.yml file for the serverless application stack
 version: '3.8'
 
 services:
