@@ -1,11 +1,12 @@
 FROM node:14-alpine
 
 WORKDIR /app
+# encountered a stupid error where function.js was trying to get mounted at build time but thats WRONG.
+#The actual functions needs to be mounted at run time.
+# Copy package.json if it exists for party time
 
-# Don't try to copy function.js at build time
-# Copy package.json if it exists
 COPY package.json* .
 RUN if [ -f package.json ]; then npm install; fi
 
-# The actual function.js will be mounted at runtime
+# Mounting actual function.js at runtime
 CMD ["node", "function.js"]
