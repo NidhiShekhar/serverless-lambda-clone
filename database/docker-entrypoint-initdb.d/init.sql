@@ -1,4 +1,3 @@
--- Create functions table
 CREATE TABLE IF NOT EXISTS functions (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
@@ -9,7 +8,6 @@ CREATE TABLE IF NOT EXISTS functions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create execution_logs table
 CREATE TABLE IF NOT EXISTS execution_logs (
     id SERIAL PRIMARY KEY,
     function_id INT REFERENCES functions(id) ON DELETE CASCADE,
