@@ -1,37 +1,3 @@
-# Import streamlit & requests
-
-# Setup Streamlit page config (title, layout)
-
-# Define Sidebar Navigation
-# Options:
-# - Home
-# - Deploy Function
-# - Execute Function
-# - View Logs
-# - View Metrics Dashboard (Grafana iframe)
-
-# If Deploy Function selected:
-# - Form inputs:
-#   - Function Name
-#   - Language (Python / JS)
-#   - Timeout
-#   - Code Editor (multiline text area)
-# - Submit button → calls FastAPI POST /functions/
-
-# If Execute Function selected:
-# - Enter function id or pick from dropdown
-# - Execute button → calls POST /functions/{id}/execute
-# - Display Output / Error / Execution Time
-
-# If View Logs selected:
-# - Enter function id
-# - Fetch logs via GET /functions/{id}/logs
-# - Display in table or text area
-
-# If Metrics Dashboard selected:
-# - Embed Grafana Panel iframe
-# - URL like: http://localhost:3000/d/your_dashboard_id
-
 import streamlit as st
 import requests
 import json
@@ -43,20 +9,16 @@ try:
 except RuntimeError:
     pass
 
-# Setup Streamlit page config
 st.set_page_config(
     page_title="Serverless Functions Platform",
     layout="wide"
 )
 
-# Base URL for the API
 API_BASE_URL = "http://backend:8000"
-
 
 def main():
     st.title("Serverless Functions Platform")
 
-    # Define Sidebar Navigation
     page = st.sidebar.selectbox(
         "Navigation",
         ["Home", "Deploy Function", "Execute Function", "View Logs", "Metrics Dashboard"]
@@ -89,7 +51,6 @@ def show_home():
 def deploy_function():
     st.header("Deploy a New Function")
 
-    # Form inputs
     with st.form("deploy_form"):
         name = st.text_input("Function Name")
         language = st.selectbox("Language", ["python", "javascript"])
@@ -116,7 +77,6 @@ def deploy_function():
 def execute_function():
     st.header("Execute Function")
 
-    # Get list of functions
     try:
         response = requests.get(f"{API_BASE_URL}/functions")
         functions = response.json()
@@ -125,7 +85,6 @@ def execute_function():
         function_options = {f["id"]: f"{f['id']} - {f['name']} ({f['language']})"
                             for f in functions}
 
-        # Allow user to select a function
         selected = st.selectbox(
             "Select a function to execute",
             options=list(function_options.keys()),
@@ -141,7 +100,6 @@ def execute_function():
 
                     st.success("Function executed successfully")
 
-                    # Check if result contains output or error
                     if "result" in result:
                         result_data = result["result"]
                         if "output" in result_data:
@@ -162,7 +120,6 @@ def execute_function():
 def view_logs():
     st.header("Function Execution Logs")
 
-    # Get list of functions
     try:
         response = requests.get(f"{API_BASE_URL}/functions")
         functions = response.json()
@@ -171,7 +128,7 @@ def view_logs():
         function_options = {f["id"]: f"{f['id']} - {f['name']} ({f['language']})"
                             for f in functions}
 
-        # Allow user to select a function
+
         selected = st.selectbox(
             "Select a function to view logs",
             options=list(function_options.keys()),
@@ -222,12 +179,7 @@ def show_metrics_dashboard():
 
     with tab1:
         st.subheader("Function Execution Metrics")
-
-        # Replace with your actual dashboard ID from Grafana
-        # You can find this ID in the URL after /d/ when viewing your dashboard
         dashboard_id = "lambda-metrics"
-
-        # Embed the Grafana dashboard with proper parameters
         st.components.v1.iframe(
             f"http://localhost:3000/d/lambda-metrics/serverless-lambda-clone-full-metrics?orgId=1&from=now-6h&to=now&timezone=browser&refresh=10s",
             height=800,
@@ -235,11 +187,9 @@ def show_metrics_dashboard():
         )
 
     with tab2:
-        # Keep your existing raw metrics display code
         st.subheader("Raw Prometheus Metrics")
         metrics_response = requests.get(f"{API_BASE_URL}/metrics")
         if metrics_response.status_code == 200:
-            # Rest of your existing metrics code
             metrics_text = metrics_response.text
             function_metrics = [line for line in metrics_text.split('\n')
                                 if 'serverless_function' in line and not line.startswith('#')]
