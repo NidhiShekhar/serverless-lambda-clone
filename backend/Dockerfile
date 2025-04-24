@@ -9,7 +9,6 @@ COPY . /app/backend/
 
 ENV PYTHONPATH=/app
 
-# Adjust the command based on your actual backend framework
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 
