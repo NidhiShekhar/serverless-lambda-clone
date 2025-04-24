@@ -1,4 +1,3 @@
-# backend/engine/executor.py
 import tempfile
 import os
 import time
