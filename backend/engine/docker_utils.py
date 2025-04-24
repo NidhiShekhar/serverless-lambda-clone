@@ -1,4 +1,3 @@
-# backend/engine/docker_utils.py
 import logging
 import sys
 import docker
@@ -21,13 +20,12 @@ def check_docker_availability():
         logger.error(f"Docker is not available: {str(e)}")
         return False
 
-# Add to backend/engine/docker_utils.py
 def check_docker_permissions():
     """Verify Python has permissions to use Docker"""
     try:
         import docker
         client = docker.from_env()
-        # Try a simple container as a permissions test
+        # Trying a simple container as a permissions test for initial connections
         container = client.containers.run("hello-world", detach =False, remove=True, network_mode='host')
         return True
     except Exception as e:
@@ -46,7 +44,6 @@ def test_docker_setup():
     logger.info("Docker setup is working correctly.")
     return True
 
-# In docker_utils.py
 def test_container_run():
     try:
         client = docker.from_env()
@@ -54,7 +51,7 @@ def test_container_run():
             "hello-world",
             detach=False,
             remove=True,
-            network_mode='host'  # Add this line to fix bridge issues
+            network_mode='host' 
         )
         return True
     except Exception as e:
