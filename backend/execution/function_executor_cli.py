@@ -1,10 +1,8 @@
-# backend/execution/docker_manager.py
 import argparse
 import sys
 import logging
 from pathlib import Path
 
-# Add parent directory to path to import from other modules
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
 from backend.engine.executor import docker_executor
@@ -17,7 +15,7 @@ logger = logging.getLogger(__name__)
 def test_function_execution(code, language="python", timeout=10):
     """Simple wrapper to test function execution via CLI"""
 
-    # Create a simple function object (similar to your DB model)
+    # Creating a simple function object
     class Function:
         pass
 
@@ -41,7 +39,6 @@ def main():
 
     args = parser.parse_args()
 
-    # Get code from argument or file
     code = args.code
     if args.file:
         with open(args.file, 'r') as f:
@@ -50,11 +47,9 @@ def main():
     if not code:
         parser.error("Either --code or --file must be provided")
 
-    # Run the function
     print(f"Executing {args.language} function with timeout {args.timeout}s...")
     result = test_function_execution(code, args.language, args.timeout)
 
-    # Print results
     if "output" in result:
         print("\n--- OUTPUT ---")
         print(result["output"])
