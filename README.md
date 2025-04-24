@@ -73,19 +73,10 @@ This project is an open-source re-creation of AWS Lambda's core idea — a platf
 |Database | Logs all functions & their execution history |
 |UI | Streamlit dashboard  |
 
----
-
-## What makes this project cool?
-- Realistic cloud-like architecture
-- End-to-end production-style workflow
-- Isolation of user code execution (secure)
-- Live observability (like AWS CloudWatch dashboards)
-- Ready for future additions like auto-scaling, JWT Auth, Multi-language support
 
 ---
 
 ## Tools used beyond coding:
-- VSCode (for infra files: Prometheus, Grafana, Docker)
 - PyCharm (for backend Python development)
 - Git + GitHub (version control)
 - Docker Compose (one command deploy)
@@ -95,6 +86,7 @@ This project is an open-source re-creation of AWS Lambda's core idea — a platf
 ## Future Scope:
 - Authentication (JWT based)
 - Autoscaling executor pool
+- Adding second virtualisation layer using a microVM
 - Billing / Cost Estimation logic
 - Multi-language support beyond Python & JS
 - Deploy to a Cloud Provider (AWS/GCP)
@@ -102,6 +94,11 @@ This project is an open-source re-creation of AWS Lambda's core idea — a platf
 - Async Execution handling
 
 ---
+
+## Steps to run 
+1. Step 1. Git clone the repo
+2. Step 2. To start the containers ```bash docker-compose up -v ```
+3. Step 3. To stop the containers ```bash docker-compose down -v ```
 
 GitHub: [https://github.com/your-username/serverless-lambda-clone](https://github.com/your-username/serverless-lambda-clone)
 
